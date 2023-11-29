@@ -16,6 +16,7 @@ let statusBarItemShowing = false;
 
 // -------------------------------------------------------------------------------------------
 
+let  last = {restrict: '', putCursorForward: '', kbText: '', back: false};
 
 /**
  * Move cursor forward to next chosen character, without selection
@@ -32,9 +33,15 @@ exports.jumpForward = function (restrict, putCursorForward, kbText, multiMode) {
 	else {
 		let typeDisposable = vscode.commands.registerCommand('type', arg => {
 			// arg === { text: "a" }, so use arg.text to get the value
-
+			let d;
 			// on 'Enter' exit command and dispose
 			if (_shouldExitAndDisposeCommand(typeDisposable, arg.text)) return;
+
+			last.restrict = restrict;
+			last.putCursorForward = putCursorForward;
+			last.kbText = arg.text;
+			last.back = false;
+			vscode.commands.executeCommand('rahulvscodeplugin.normal');
 
 			_jumpForward(restrict, putCursorForward, arg.text);
 			if (!multiMode) typeDisposable.dispose();
@@ -43,6 +50,15 @@ exports.jumpForward = function (restrict, putCursorForward, kbText, multiMode) {
 	}
 }
 
+exports.redo = function () {
+	if (last.back)
+	{
+		_jumpBackward(last.restrict, last.putCursorForward, last.kbText);	
+	} else
+	{
+		_jumpForward(last.restrict, last.putCursorForward, last.kbText);		
+	}
+}
 
 /**
  * Move cursor forward to next chosen character, with selection from cursor to character
@@ -87,6 +103,11 @@ exports.jumpBackward = function (restrict, putCursorBackward, kbText, multiMode)
 		let typeDisposable = vscode.commands.registerCommand('type', arg => {
 
 			if (_shouldExitAndDisposeCommand(typeDisposable, arg.text)) return;
+			last.restrict = restrict;
+			last.putCursorForward = putCursorBackward;
+			last.kbText = arg.text;
+			last.back = true;
+			vscode.commands.executeCommand('rahulvscodeplugin.normal');
 
 			_jumpBackward(restrict, putCursorBackward, arg.text);
 			if (!multiMode) typeDisposable.dispose();
@@ -129,6 +150,7 @@ exports.jumpBackwardSelect = function (restrict, putCursorBackward, kbText, mult
  * @param {string} query - keybinding arg or next character typed
  */
 function _jumpForward(restrict, putCursorForward, query) {
+	vscode.commands.executeCommand("setContext", "modal.search", false);
 
 	if (!vscode.window.activeTextEditor) {
 		return;
@@ -172,6 +194,7 @@ function _jumpForward(restrict, putCursorForward, query) {
  */
 function _jumpForwardSelect (restrict, putCursorForward, query) {
 
+	vscode.commands.executeCommand("setContext", "modal.search", false);
 	if (!vscode.window.activeTextEditor) {
 		return;
 	}
@@ -215,6 +238,7 @@ function _jumpForwardSelect (restrict, putCursorForward, query) {
  */
 function _jumpBackward(restrict, putCursorBackward, query) {
 
+	vscode.commands.executeCommand("setContext", "modal.search", false);
 	if (!vscode.window.activeTextEditor) {
 		return;
 	}
@@ -261,6 +285,7 @@ function _jumpBackward(restrict, putCursorBackward, query) {
  */
 function _jumpBackwardSelect(restrict, putCursorBackward, query) {
 
+	vscode.commands.executeCommand("setContext", "modal.search", false);
 	if (!vscode.window.activeTextEditor) {
 		return;
 	}
@@ -358,7 +383,7 @@ function getQueryDocumentIndexForward(cursorPosition, query) {
 
 		let lastLine = editor.document.lineAt(editor.document.lineCount - 1);
 		let curEndRange = new vscode.Range(cursorPosition, lastLine.range.end);
-
+		query = query.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'); // escape // needed for special chars
 		const regexp = new RegExp(query, 'gm');
 		const matches = [...editor.document.getText(curEndRange).matchAll(regexp)];
 		if (matches.length) {

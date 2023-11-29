@@ -39,6 +39,11 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "jump-and-select.redo",
+				"title": "Jump forward to redo",
+				"category": "Jump-Select"
+			},
+			{
 				"command": "jump-and-select.jumpForward",
 				"title": "Jump forward to next occurrence",
 				"category": "Jump-Select"
