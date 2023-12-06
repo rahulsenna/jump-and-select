@@ -342,6 +342,7 @@ function getQueryLineIndexForward(cursorPosition, query) {
 
 		let restOfLine = editor.document.lineAt(cursorPosition.line).text.substring(cursorPosition.character);
 
+		query = query.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'); // escape // needed for special chars
 		const regexp = new RegExp(query, 'gm');
 		const matches = [...restOfLine.matchAll(regexp)];
 		if (matches.length) {
@@ -425,6 +426,7 @@ function getQueryLineIndexBackward(cursorPosition, query) {
 
 		let startOfLine = editor.document.lineAt(cursorPosition.line).text.substring(0, cursorPosition.character);
 
+		query = query.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'); // escape // needed for special chars
 		const regexp = new RegExp(query, 'gm');
 		const matches = [...startOfLine.matchAll(regexp)];
 
@@ -464,6 +466,7 @@ function getQueryDocumentIndexBackward(cursorPosition, query) {
 		const firstLine = editor.document.lineAt(0);
 		let curStartRange = new vscode.Range(cursorPosition, firstLine.range.start);
 
+		query = query.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&'); // escape // needed for special chars
 		const regexp = new RegExp(query, 'gm');
 		const matches = [...editor.document.getText(curStartRange).matchAll(regexp)];
 
