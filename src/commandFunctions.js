@@ -17,7 +17,7 @@ let statusBarItemShowing = false;
 // -------------------------------------------------------------------------------------------
 
 let  last = {restrict: '', putCursorForward: '', kbText: '', back: false};
-
+const shiftedKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*{}()_+:\"<>?|"; // in my keybinds shift key is for insert mode, this conflicts with seaching char that need shift, so this is a workaround
 /**
  * Move cursor forward to next chosen character, without selection
  * @param {string} restrict - search forward in current line or document
@@ -33,7 +33,7 @@ exports.jumpForward = function (restrict, putCursorForward, kbText, multiMode) {
 	else {
 		let typeDisposable = vscode.commands.registerCommand('type', arg => {
 			// arg === { text: "a" }, so use arg.text to get the value
-			let d;
+
 			// on 'Enter' exit command and dispose
 			if (_shouldExitAndDisposeCommand(typeDisposable, arg.text)) return;
 
@@ -42,6 +42,8 @@ exports.jumpForward = function (restrict, putCursorForward, kbText, multiMode) {
 			last.kbText = arg.text;
 			last.back = false;
 			vscode.commands.executeCommand('rahulvscodeplugin.normal');
+			if (shiftedKeys.includes(arg.text))
+				vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", true);
 
 			_jumpForward(restrict, putCursorForward, arg.text);
 			if (!multiMode) typeDisposable.dispose();
@@ -58,6 +60,20 @@ exports.redo = function () {
 	{
 		_jumpForward(last.restrict, last.putCursorForward, last.kbText);		
 	}
+}
+
+exports.redo_select = function () {
+	if (last.back)
+	{
+		_jumpBackwardSelect(last.restrict, last.putCursorForward, last.kbText);	
+	} else
+	{
+		_jumpForwardSelect(last.restrict, last.putCursorForward, last.kbText);		
+	}
+}
+
+exports.reset_just_jumped = function () {	
+	vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", false);
 }
 
 /**
@@ -77,6 +93,15 @@ exports.jumpForwardSelect = function (restrict, putCursorForward, kbText, multiM
 		let typeDisposable = vscode.commands.registerCommand('type', arg => {
 
 			if (_shouldExitAndDisposeCommand(typeDisposable, arg.text)) return;
+
+			last.restrict = restrict;
+			last.putCursorForward = putCursorForward;
+			last.kbText = arg.text;
+			last.back = false;
+			vscode.commands.executeCommand('rahulvscodeplugin.normal');
+			vscode.commands.executeCommand('rahulvscodeplugin.visual');
+			if (shiftedKeys.includes(arg.text))
+				vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", true);
 
 			_jumpForwardSelect(restrict, putCursorForward, arg.text);
 			if (!multiMode) typeDisposable.dispose();
@@ -108,6 +133,8 @@ exports.jumpBackward = function (restrict, putCursorBackward, kbText, multiMode)
 			last.kbText = arg.text;
 			last.back = true;
 			vscode.commands.executeCommand('rahulvscodeplugin.normal');
+			if (shiftedKeys.includes(arg.text))
+				vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", true);
 
 			_jumpBackward(restrict, putCursorBackward, arg.text);
 			if (!multiMode) typeDisposable.dispose();
@@ -134,6 +161,15 @@ exports.jumpBackwardSelect = function (restrict, putCursorBackward, kbText, mult
 		let typeDisposable = vscode.commands.registerCommand('type', arg => {
 
 			if (_shouldExitAndDisposeCommand(typeDisposable, arg.text)) return;
+
+			last.restrict = restrict;
+			last.putCursorForward = putCursorBackward;
+			last.kbText = arg.text;
+			last.back = false;
+			vscode.commands.executeCommand('rahulvscodeplugin.normal');
+			vscode.commands.executeCommand('rahulvscodeplugin.visual');
+			if (shiftedKeys.includes(arg.text))
+				vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", true);
 
 			_jumpBackwardSelect(restrict, putCursorBackward, arg.text);
 			if (!multiMode) typeDisposable.dispose();

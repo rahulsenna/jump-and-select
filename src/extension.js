@@ -16,6 +16,7 @@ async function activate(context) {
 	providers.makeKeybindingsCompletionProvider(context);
 
 	vscode.commands.executeCommand("setContext", "modal.search", false);
+	vscode.commands.executeCommand("setContext", "jump-and-select.just_jumped", false);
 
 	let commandDisposable1 = vscode.commands.registerCommand('jump-and-select.jumpForward', (args) => {
 
@@ -40,7 +41,14 @@ async function activate(context) {
 	const redo = vscode.commands.registerCommand('jump-and-select.redo', () => {
 		commands.redo();
 	});
-	context.subscriptions.push(redo);
+	const redo_select = vscode.commands.registerCommand('jump-and-select.redo_select', () => {
+		commands.redo_select();
+	});
+
+	const reset_just_jumped = vscode.commands.registerCommand('jump-and-select.reset_just_jumped', () => {
+		commands.reset_just_jumped();
+	});
+	context.subscriptions.push(redo, redo_select, reset_just_jumped);
 
 	let commandDisposable1m = vscode.commands.registerCommand('jump-and-select.jumpForwardMultiMode', (args) => {
 		vscode.commands.executeCommand("setContext", "modal.search", true);
